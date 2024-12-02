@@ -1,0 +1,11 @@
+name: doudenko-api
+services:
+  php:
+    build:
+      context: ./docker/php
+    env_file:
+      - .env
+    restart: always
+    volumes:
+      - ./docker/php/conf.d:/usr/local/etc/php/conf.d
+      - .:/var/www
