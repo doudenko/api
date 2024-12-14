@@ -1,5 +1,6 @@
 {
     "name": "doudenko/api",
+    "description": "Generalized implementation of an API client (a service that interacts with an external API).",
     "version": "0.1.1",
     "type": "library",
     "license": "MIT",
@@ -21,10 +22,10 @@
         "symfony/serializer": "^7.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "^11.4",
-        "friendsofphp/php-cs-fixer": "*",
+        "phpunit/phpunit": "^11.5",
+        "friendsofphp/php-cs-fixer": "^v3.65",
         "mockery/mockery": "^1.6",
-        "dg/bypass-finals": "^1.8"
+        "dg/bypass-finals": "^v1.8"
     },
     "config": {
         "sort-packages": true
