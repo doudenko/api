@@ -22,8 +22,6 @@ interface ApiClientInterface
 
     /**
      * @param class-string $responseClass
-     *
-     * @throws ApiExceptionInterface
      */
     public function sendAsync(ApiRequestInterface $apiRequest, string $responseClass): PromiseInterface;
 }

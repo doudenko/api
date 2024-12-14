@@ -1,7 +1,7 @@
 {
     "name": "doudenko/api",
     "description": "Generalized implementation of an API client (a service that interacts with an external API).",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "type": "library",
     "license": "MIT",
     "autoload": {
