@@ -6,9 +6,13 @@ use Doudenko\Api\Client\HttpMethod;
 
 interface ApiRequestInterface
 {
-    public function getHttpMethod(): HttpMethod;
+    public HttpMethod $method {
+        get;
+    }
 
-    public function getUriPath(): string;
+    public string $uri {
+        get;
+    }
 
     public function getPayload(): mixed;
 }

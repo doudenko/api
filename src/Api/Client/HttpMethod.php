@@ -6,6 +6,11 @@ namespace Doudenko\Api\Client;
 
 enum HttpMethod: string
 {
+    private const array EMPTY_BODY_METHODS = [
+        self::Get,
+        self::Head,
+    ];
+
     case Get = 'GET';
     case Post = 'POST';
     case Put = 'PUT';
@@ -14,8 +19,8 @@ enum HttpMethod: string
     case Options = 'OPTIONS';
     case Head = 'HEAD';
 
-    public function hasBody(): bool
+    public function hasEmptyBody(): bool
     {
-        return !in_array($this, [self::Get, self::Head], true);
+        return in_array($this, self::EMPTY_BODY_METHODS, true);
     }
 }
