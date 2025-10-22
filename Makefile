@@ -1,35 +1,36 @@
 .PHONY: help up down ps shell install update test
 .DEFAULT_GOAL   	= help
+
 SHELL 		    	= /bin/bash
 ENV_PATH	    	= .env
 UID             	= $(shell id -u)
 GID             	= $(shell id -g)
 LIST            	= $(firstword $(MAKEFILE_LIST))
-DOCKER_RUN      	= ${DOCKER_COMPOSE} exec php
-DOCKER_RUN_AS_USER	= ${DOCKER_COMPOSE} exec --user ${UID}:${UID} php
+DOCKER_RUN      	= ${DOCKER_COMPOSE} exec application
+DOCKER_RUN_AS_USER	= ${DOCKER_COMPOSE} exec --user ${UID}:${UID} application
 
 include ${ENV_PATH}
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' ${LIST} | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-up: ## Запуск контейнеров
+up: ## Запустить приложение. Произвести сборку Docker образов и запуск контейнеров необходимых для работы приложения
 	@${DOCKER_COMPOSE} up --build -d --remove-orphans
 
-down: ## Остановка контейнеров
+down: ## Остановить приложение. Остановить запущенные контейнеры приложения и удалить Docker образы
 	@${DOCKER_COMPOSE} down --remove-orphans
 
-ps: ## Просмотр статуса контейнеров
+ps: ## Показать статус контейнеров
 	@${DOCKER_COMPOSE} ps
 
-shell: ## Вход в контейнер app
-	@${DOCKER_RUN_AS_USER} bash
+shell: ## Запустить терминал командной строки в основном контейнере приложения
+	@${DOCKER_RUN_AS_USER} ${SHELL}
 
-install: ## Запуск composer install
-	@${DOCKER_RUN_AS_USER} composer install --prefer-dist
+install: ## Установить зависимости проекта
+	@${DOCKER_RUN_AS_USER} composer install --no-cache --prefer-dist
 
-update: ## Запуск composer update
-	@${DOCKER_RUN_AS_USER} composer update --prefer-dist
+update: ## Обновить зависимости проекта
+	@${DOCKER_RUN_AS_USER} composer update --no-cache --prefer-dist
 
-test: ## Запуск юнит-тестов и проверки кодстайла
+test: ## Запустить тесты
 	@${DOCKER_RUN} composer run-script test

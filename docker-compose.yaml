@@ -1,11 +1,13 @@
-name: doudenko-api
+name: api
+
 services:
-  php:
+  application:
+    container_name: api.service.application
     build:
-      context: ./docker/php
+      context: ./docker/application
     env_file:
-      - .env
+      - ./.env
     restart: always
     volumes:
-      - ./docker/php/conf.d:/usr/local/etc/php/conf.d
+      - ./docker/application/conf.d:/usr/local/etc/application/conf.d
       - .:/var/www

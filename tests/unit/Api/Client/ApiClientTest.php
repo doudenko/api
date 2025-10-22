@@ -8,35 +8,49 @@ use Doudenko\Api\Client\ApiClient;
 use Doudenko\Api\Client\HttpMethod;
 use Doudenko\Api\Client\HttpRequestFactoryInterface;
 use Doudenko\Api\Request\ApiRequestInterface;
-use Doudenko\Api\Request\ApiRequestWithPayloadProperty;
 use Doudenko\Api\Response\ApiResponse;
 use Doudenko\Api\Response\ApiResponseInterface;
+use Generator;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Promise;
 use GuzzleHttp\Psr7\Request;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class ApiClientTest extends TestCase
 {
-    public function testSendAsync(): void
+    #[Test]
+    #[DataProvider('generateApiRequestParameters')]
+    public function sendAsyncPositive(HttpMethod $method, string $uri, mixed $payload): void
     {
-        $apiRequest = $this->createRequest();
-        $httpRequest = new Request($apiRequest->getUriPath(), $apiRequest->getHttpMethod()->value);
+        $apiRequest = $this->createApiRequest($method, $uri, $payload);
+        $request = new Request($method->value, $uri);
 
         $httpRequestFactoryMock = mock(HttpRequestFactoryInterface::class);
         $httpRequestFactoryMock
-            ->shouldReceive('create')
+            ->shouldReceive('createRequest')
             ->with($apiRequest)
-            ->andReturn($httpRequest)
-            ->atLeast()->once();
+            ->andReturn($request)
+            ->atLeast()
+            ->once()
+        ;
+
+        $expectedResponse = new ApiResponse();
+
+        $promiseMock = mock(Promise::class);
+        $promiseMock->shouldReceive('then')->withAnyArgs()->andReturn($promiseMock);
+        $promiseMock->shouldReceive('wait')->withNoArgs()->andReturn($expectedResponse);
 
         $httpClientMock = mock(ClientInterface::class);
         $httpClientMock
             ->shouldReceive('sendAsync')
-            ->with($httpRequest, [])
-            ->andReturn(new Promise())
-            ->atLeast()->once();
+            ->with($request, [])
+            ->andReturn($promiseMock)
+            ->atLeast()
+            ->once()
+        ;
 
         $serializerMock = mock(SerializerInterface::class);
 
@@ -46,22 +60,43 @@ class ApiClientTest extends TestCase
             $serializerMock,
         );
 
-        $expectedResponse = new ApiResponse();
-
-        $promise = $apiClient->sendAsync($apiRequest, ApiResponse::class);
-        $promise->resolve($expectedResponse);
-
-        $actualResponse = $promise->wait();
+        $actualResponse = $apiClient->sendAsync($apiRequest, ApiResponse::class)->wait();
 
         self::assertInstanceOf(ApiResponseInterface::class, $actualResponse);
         self::assertSame($expectedResponse, $actualResponse);
     }
 
-    public function createRequest(): ApiRequestInterface
+    private function createApiRequest(HttpMethod $method, string $uri, mixed $payload): ApiRequestInterface
     {
-        return new class([]) extends ApiRequestWithPayloadProperty {
-            public function getHttpMethod(): HttpMethod { return HttpMethod::Get; }
-            public function getUriPath(): string { return '/'; }
+        return new readonly class ($method, $uri, $payload) implements ApiRequestInterface
+        {
+            public function __construct(
+                public HttpMethod $method,
+                public string $uri,
+                public mixed $payload,
+            ) {
+            }
+
+            public function getHttpMethod(): HttpMethod
+            {
+                return $this->method;
+            }
+
+            public function getUriPath(): string
+            {
+                return $this->uri;
+            }
+
+            public function getPayload(): mixed
+            {
+                return $this->payload;
+            }
         };
+    }
+
+    public static function generateApiRequestParameters(): Generator
+    {
+        yield ['method' => HttpMethod::Get, 'uri' => '/', 'payload' => ['first' => 'one', 'second' => 'two']];
+        yield ['method' => HttpMethod::Post, 'uri' => '/', 'payload' => ['first' => 'one', 'second' => 'two']];
     }
 }

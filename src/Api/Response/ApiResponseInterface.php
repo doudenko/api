@@ -2,4 +2,6 @@
 
 namespace Doudenko\Api\Response;
 
-interface ApiResponseInterface {}
+interface ApiResponseInterface
+{
+}
