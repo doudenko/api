@@ -1,13 +1,20 @@
 name: api
 
 services:
-  application:
-    container_name: api.service.application
-    build:
-      context: ./docker/application
-    env_file:
-      - ./.env
-    restart: always
-    volumes:
-      - ./docker/application/conf.d:/usr/local/etc/application/conf.d
-      - .:/var/www
+    application:
+        container_name: api.service.application
+        build:
+            context: ./docker/application
+        env_file:
+            - ./.env
+        restart: always
+        volumes:
+            - ./docker/application/conf.d:/usr/local/etc/application/conf.d
+            - .:/var/www
+        networks:
+            - internal
+
+networks:
+    internal:
+        name: api.network.internal
+        driver: bridge

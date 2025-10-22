@@ -9,16 +9,14 @@ $finder = PhpCsFixer\Finder::create()->in([
     'tests',
 ]);
 
-$config = new PhpCsFixer\Config();
-
-return $config
+return new PhpCsFixer\Config()
     ->setRules([
         '@PER-CS' => true,
         '@PHP82Migration' => true,
         'align_multiline_comment' => true,
         'array_indentation' => true,
         'binary_operator_spaces' => ['default' => 'single_space'],
-        'blank_line_after_opening_tag' => false,
+        'blank_line_after_opening_tag' => true,
         'blank_line_before_statement' => [
             'statements' => [
                 'declare',
@@ -118,7 +116,7 @@ return $config
         'set_type_to_cast' => true,
         'single_blank_line_at_eof' => true,
         'single_import_per_statement' => true,
-        'single_line_empty_body' => true,
+        'single_line_empty_body' => false,
         'single_space_around_construct' => true,
         'single_quote' => true,
         'space_after_semicolon' => true,
