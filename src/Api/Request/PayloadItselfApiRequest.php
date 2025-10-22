@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Doudenko\Api\Request;
 
-abstract class SelfPayloadedApiRequest implements ApiRequestInterface
+abstract class PayloadItselfApiRequest implements ApiRequestInterface
 {
     final public function getPayload(): self
     {

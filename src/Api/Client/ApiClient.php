@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Doudenko\Api\Client;
 
-use Doudenko\Api\Exception\ApiClientException;
-use Doudenko\Api\Exception\ApiLogicException;
+use Doudenko\Api\Exception\DomainClientException;
+use Doudenko\Api\Exception\RequestException;
+use Doudenko\Api\Exception\ResponseException;
 use Doudenko\Api\Request\ApiRequestInterface;
 use Doudenko\Api\Response\ApiResponseInterface;
 use GuzzleHttp\ClientInterface;
@@ -14,6 +15,7 @@ use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 readonly class ApiClient implements ApiClientInterface
@@ -22,7 +24,8 @@ readonly class ApiClient implements ApiClientInterface
         protected HttpRequestFactoryInterface $httpRequestFactory,
         protected ClientInterface $httpClient,
         protected SerializerInterface $serializer,
-    ) {}
+    ) {
+    }
 
     final public function send(ApiRequestInterface $apiRequest, string $responseClass): ApiResponseInterface
     {
@@ -31,23 +34,19 @@ readonly class ApiClient implements ApiClientInterface
 
     final public function sendAsync(ApiRequestInterface $apiRequest, string $responseClass): PromiseInterface
     {
-        $httpRequest = $this->httpRequestFactory->create(
-            $apiRequest,
-        );
+        $request = $this->httpRequestFactory->createRequest($apiRequest);
+        $requestOptions = $this->getRequestOptions($request);
 
-        $promise = $this->httpClient->sendAsync(
-            $httpRequest,
-            $this->getRequestOptions($httpRequest),
-        );
+        $responsePromise = $this->httpClient->sendAsync($request, $requestOptions);
 
-        return $promise->then(
-            fn (ResponseInterface $response) => $this->deserializeResponseBody($response, $responseClass),
-            fn (ClientExceptionInterface $exception) => $this->throwException($exception, $apiRequest),
+        return $responsePromise->then(
+            fn (ResponseInterface $response) => $this->deserializeResponse($response, $responseClass),
+            fn (ClientExceptionInterface $exception) => $this->throwException($apiRequest, $exception),
         );
     }
 
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     protected function getRequestOptions(RequestInterface $request): array
     {
@@ -55,33 +54,46 @@ readonly class ApiClient implements ApiClientInterface
     }
 
     /**
-     * @template ClassName
+     * @template ClassName of ApiResponseInterface
      *
      * @param class-string<ClassName> $responseClass
      *
      * @return ClassName
+     * @throws DomainClientException
+     * @throws ResponseException
      */
-    protected function deserializeResponseBody(ResponseInterface $response, string $responseClass): ApiResponseInterface
+    protected function deserializeResponse(ResponseInterface $response, string $responseClass): ApiResponseInterface
     {
         if (!class_exists($responseClass) || !is_a($responseClass, ApiResponseInterface::class, true)) {
-            throw new ApiLogicException("The specified response class is not supported: {$responseClass}");
+            throw new DomainClientException('The specified class is not a valid API response class.');
         }
 
-        $responsePayload = (string)$response->getBody();
+        $responsePayload = strval($response->getBody());
 
-        return $this->serializer->deserialize(
-            $responsePayload,
-            $responseClass,
-            JsonEncoder::FORMAT,
-        );
+        try {
+            return $this->serializer->deserialize(
+                $responsePayload,
+                $responseClass,
+                JsonEncoder::FORMAT,
+            );
+        } catch (ExceptionInterface $exception) {
+            throw new ResponseException(
+                $response,
+                'An error occurred while decoding the API response.',
+                previous: $exception,
+            );
+        }
     }
 
-    protected function throwException(ClientExceptionInterface $exception, ApiRequestInterface $apiRequest): never
+    /**
+     * @throws RequestException
+     */
+    protected function throwException(ApiRequestInterface $apiRequest, ClientExceptionInterface $exception): never
     {
-        throw new ApiClientException(
+        throw new RequestException(
             $apiRequest,
-            'При отправке запроса произошла ошибка',
-            $exception,
+            'An error occurred while sending the API request.',
+            previous: $exception,
         );
     }
 }

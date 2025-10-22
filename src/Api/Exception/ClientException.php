@@ -6,6 +6,6 @@ namespace Doudenko\Api\Exception;
 
 use RuntimeException;
 
-class ApiException extends RuntimeException implements ApiExceptionInterface
+class ClientException extends RuntimeException implements ClientExceptionInterface
 {
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Doudenko\Api\Client;
 
+use Doudenko\Api\Exception\RequestException;
 use Doudenko\Api\Request\ApiRequestInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
@@ -11,6 +12,7 @@ use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 readonly class HttpRequestFactory implements HttpRequestFactoryInterface
@@ -18,10 +20,11 @@ readonly class HttpRequestFactory implements HttpRequestFactoryInterface
     public function __construct(
         protected RequestFactoryInterface $requestFactory,
         protected SerializerInterface $serializer,
-        protected string $baseUri,
-    ) {}
+        protected Configuration $configuration,
+    ) {
+    }
 
-    final public function create(ApiRequestInterface $apiRequest): RequestInterface
+    final public function createRequest(ApiRequestInterface $apiRequest): RequestInterface
     {
         $request = $this->requestFactory->createRequest(
             $apiRequest->getHttpMethod()->value,
@@ -39,7 +42,7 @@ readonly class HttpRequestFactory implements HttpRequestFactoryInterface
 
     protected function createUri(ApiRequestInterface $apiRequest): UriInterface
     {
-        $uri = $this->baseUri . $apiRequest->getUriPath();
+        $uri = $this->configuration->baseUri . $apiRequest->getUriPath();
         $queryParameters = $this->getQueryParameters($apiRequest);
 
         if ($queryParameters !== []) {
@@ -49,14 +52,9 @@ readonly class HttpRequestFactory implements HttpRequestFactoryInterface
         return $this->requestFactory->createUri($uri);
     }
 
-    protected function isRequestHasBody(ApiRequestInterface $apiRequest): bool
-    {
-        return !in_array($apiRequest->getHttpMethod(), [HttpMethod::Get, HttpMethod::Head], true);
-    }
-
     protected function getQueryParameters(ApiRequestInterface $apiRequest): array
     {
-        if ($this->isRequestHasBody($apiRequest)) {
+        if ($apiRequest->getHttpMethod()->hasBody()) {
             return [];
         }
 
@@ -70,17 +68,28 @@ readonly class HttpRequestFactory implements HttpRequestFactoryInterface
         return [];
     }
 
+    /**
+     * @throws RequestException
+     */
     protected function createBody(ApiRequestInterface $apiRequest): StreamInterface
     {
-        if (!$this->isRequestHasBody($apiRequest)) {
+        if (!$apiRequest->getHttpMethod()->hasBody()) {
             return $this->requestFactory->createStream();
         }
 
-        $rawBody = $this->serializer->serialize(
-            $apiRequest->getPayload(),
-            JsonEncoder::FORMAT,
-            $this->getSerializationContext(),
-        );
+        try {
+            $rawBody = $this->serializer->serialize(
+                $apiRequest->getPayload(),
+                JsonEncoder::FORMAT,
+                $this->getSerializationContext(),
+            );
+        } catch (ExceptionInterface $exception) {
+            throw new RequestException(
+                $apiRequest,
+                'An error occurred while encoding the API request.',
+                previous: $exception,
+            );
+        }
 
         return $this->requestFactory->createStream(
             $rawBody,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Doudenko\Api\Request;
 
-abstract class ApiRequestWithPayloadProperty implements ApiRequestInterface
+abstract class PayloadAwareApiRequest implements ApiRequestInterface
 {
     public readonly mixed $payload;
 

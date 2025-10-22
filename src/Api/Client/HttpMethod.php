@@ -13,4 +13,9 @@ enum HttpMethod: string
     case Patch = 'PATCH';
     case Options = 'OPTIONS';
     case Head = 'HEAD';
+
+    public function hasBody(): bool
+    {
+        return !in_array($this, [self::Get, self::Head], true);
+    }
 }

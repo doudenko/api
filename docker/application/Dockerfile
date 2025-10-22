@@ -13,6 +13,4 @@ RUN apk add --no-cache bash linux-headers \
 
 WORKDIR /var/www
 
-EXPOSE $PHP_PORT:9000
-
 ENTRYPOINT ["php-fpm"]

@@ -1,17 +1,13 @@
 <?php
-/**
- * Tests entry point.
- */
+
 declare(strict_types=1);
 
+namespace Doudenko\Api\Tests;
+
 use DG\BypassFinals;
+use Mockery;
 
-defined('ROOT_PATH') || define('ROOT_PATH', dirname(__DIR__, 2));
-
-/**
- * Include Composer autoloader.
- */
-require_once ROOT_PATH . '/vendor/autoload.php';
+require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
 
 // Removes keyword "final" from source code
 BypassFinals::enable();
