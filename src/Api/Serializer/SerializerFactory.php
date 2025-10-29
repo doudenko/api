@@ -7,6 +7,7 @@ namespace Doudenko\Api\Serializer;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
+use Symfony\Component\Serializer\Encoder\JsonEncode;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
@@ -20,6 +21,9 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
+
+use const JSON_PRESERVE_ZERO_FRACTION;
+use const JSON_UNESCAPED_UNICODE;
 
 final readonly class SerializerFactory
 {
@@ -47,6 +51,9 @@ final readonly class SerializerFactory
             ],
             encoders: [
                 new JsonEncoder(),
+            ],
+            defaultContext:  [
+                JsonEncode::OPTIONS => JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE,
             ],
         );
     }

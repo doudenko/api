@@ -2,9 +2,8 @@
 
 namespace Doudenko\Api\Client;
 
+use Doudenko\Api\Exception\ClientException;
 use Doudenko\Api\Exception\DomainClientException;
-use Doudenko\Api\Exception\RequestException;
-use Doudenko\Api\Exception\ResponseException;
 use Doudenko\Api\Request\ApiRequestInterface;
 use Doudenko\Api\Response\ApiResponseInterface;
 use GuzzleHttp\Promise\PromiseInterface;
@@ -17,9 +16,8 @@ interface ApiClientInterface
      * @param class-string<ClassName> $responseClass
      *
      * @return ClassName
-     * @throws DomainClientException
-     * @throws RequestException
-     * @throws ResponseException
+     * @throws DomainClientException If the specified class is not a valid API response class.
+     * @throws ClientException
      */
     public function send(ApiRequestInterface $apiRequest, string $responseClass): ApiResponseInterface;
 
@@ -28,9 +26,9 @@ interface ApiClientInterface
      *
      * @param class-string<ClassName> $responseClass
      *
-     * @return PromiseInterface<ClassName, ResponseException>
-     * @throws DomainClientException
-     * @throws RequestException
+     * @return PromiseInterface<ClassName, ClientException>
+     * @throws DomainClientException If the specified class is not a valid API response class.
+     * @throws ClientException
      */
     public function sendAsync(ApiRequestInterface $apiRequest, string $responseClass): PromiseInterface;
 }

@@ -33,4 +33,7 @@ update: ## Обновить зависимости проекта
 	@${DOCKER_RUN_AS_USER} composer update --no-cache --prefer-dist
 
 test: ## Запустить тесты
-	@${DOCKER_RUN} composer run-script test
+	@${DOCKER_RUN_AS_USER} composer run-script test
+
+run: ## Выполнить стартовый скрипт
+	@${DOCKER_RUN_AS_USER} php public/index.php
