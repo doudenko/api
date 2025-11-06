@@ -2,12 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Doudenko\Api\Tests;
-
 use DG\BypassFinals;
-use Mockery;
 
-require_once dirname(__DIR__, 2) . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 // Removes keyword "final" from source code
 BypassFinals::enable();

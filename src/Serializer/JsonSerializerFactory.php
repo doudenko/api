@@ -17,7 +17,7 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -25,19 +25,25 @@ use Symfony\Component\Serializer\SerializerInterface;
 use const JSON_PRESERVE_ZERO_FRACTION;
 use const JSON_UNESCAPED_UNICODE;
 
-final readonly class SerializerFactory
+readonly class JsonSerializerFactory
 {
-    public function createJsonSerializer(): SerializerInterface
+    /**
+     * @param array<string, mixed> $defaultContext
+     */
+    public function __construct(
+        private array $defaultContext =  [
+            JsonEncode::OPTIONS => JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE,
+        ],
+    ) {
+    }
+
+    public function create(): NormalizerInterface & SerializerInterface
     {
         return new Serializer(
             normalizers: [
                 new ArrayDenormalizer(),
                 new BackedEnumNormalizer(),
                 new DateTimeNormalizer(),
-                new ObjectNormalizer(
-                    $this->createClassMetadataFactory(),
-                    $this->createNameConverter(),
-                ),
                 new PropertyNormalizer(
                     $this->createClassMetadataFactory(),
                     $this->createNameConverter(),
@@ -52,9 +58,7 @@ final readonly class SerializerFactory
             encoders: [
                 new JsonEncoder(),
             ],
-            defaultContext:  [
-                JsonEncode::OPTIONS => JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE,
-            ],
+            defaultContext: $this->defaultContext,
         );
     }
 

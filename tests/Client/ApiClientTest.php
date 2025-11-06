@@ -10,7 +10,6 @@ use Doudenko\Api\Client\HttpRequestFactoryInterface;
 use Doudenko\Api\Client\HttpRequestOptions;
 use Doudenko\Api\Exception\DomainClientException;
 use Doudenko\Api\Request\AbstractApiRequest;
-use Doudenko\Api\Request\ApiRequestInterface;
 use Doudenko\Api\Response\ApiResponse;
 use Doudenko\Api\Response\ApiResponseInterface;
 use Generator;
@@ -23,19 +22,19 @@ use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\Serializer\SerializerInterface;
 
-class ApiClientTest extends TestCase
+final class ApiClientTest extends TestCase
 {
     #[Test]
     #[DataProvider('generateApiRequestParameters')]
     public function sendAsyncPositive(HttpMethod $method, string $uri, mixed $payload): void
     {
-        $apiRequest = $this->createApiRequest($method, $uri, $payload);
+        $request = $this->createRequest(ApiResponse::class, $method, $uri, $payload);
 
         $httpRequestFactoryMock = mock(HttpRequestFactoryInterface::class);
         $httpRequestFactoryMock
-            ->shouldReceive('createRequest')
-            ->with($apiRequest)
-            ->andReturn($request = new Request($method->value, $uri))
+            ->shouldReceive('create')
+            ->with($request)
+            ->andReturn($httpRequest = new Request($method->value, $uri))
             ->atLeast()
             ->once()
         ;
@@ -43,15 +42,15 @@ class ApiClientTest extends TestCase
         $promiseMock = mock(Promise::class);
         $promiseMock->shouldReceive('then')->withAnyArgs()->andReturn($promiseMock);
         $promiseMock->shouldReceive('otherwise')->withAnyArgs()->andReturn($promiseMock);
-        $promiseMock->shouldReceive('wait')->withNoArgs()->andReturn($response = new ApiResponse());
+        $promiseMock->shouldReceive('wait')->withNoArgs()->andReturn($expectedResponse = new ApiResponse());
 
-        $optionsMock = mock(HttpRequestOptions::class);
-        $optionsMock->shouldReceive('toArray')->withNoArgs()->andReturn($options = []);
+        $httpRequestOptionsMock = mock(HttpRequestOptions::class);
+        $httpRequestOptionsMock->shouldReceive('toArray')->withNoArgs()->andReturn($options = []);
 
         $httpClientMock = mock(ClientInterface::class);
         $httpClientMock
             ->shouldReceive('sendAsync')
-            ->with($request, $options)
+            ->with($httpRequest, $options)
             ->andReturn($promiseMock)
             ->atLeast()
             ->once()
@@ -61,37 +60,38 @@ class ApiClientTest extends TestCase
             $httpRequestFactoryMock,
             $httpClientMock,
             mock(SerializerInterface::class),
-            $optionsMock,
+            $httpRequestOptionsMock,
         );
 
-        $actualResponse = $apiClient->sendAsync($apiRequest, ApiResponse::class)->wait();
+        $actualResponse = $apiClient->sendAsync($request)->wait();
 
         self::assertInstanceOf(ApiResponseInterface::class, $actualResponse);
-        self::assertSame($response, $actualResponse);
+        self::assertSame($expectedResponse, $actualResponse);
     }
 
     #[Test]
     #[DataProvider('generateApiRequestParameters')]
     public function sendAsyncNegative(HttpMethod $method, string $uri, mixed $payload): void
     {
+        $this->expectException(DomainClientException::class);
+
         $apiClient = new ApiClient(
             mock(HttpRequestFactoryInterface::class),
             mock(ClientInterface::class),
             mock(SerializerInterface::class),
         );
 
-        $this->expectException(DomainClientException::class);
-
-        $apiRequest = $this->createApiRequest($method, $uri, $payload);
-        $apiClient->sendAsync($apiRequest, stdClass::class);
+        $request = $this->createRequest(stdClass::class, $method, $uri, $payload);
+        $apiClient->sendAsync($request);
     }
 
-    private function createApiRequest(HttpMethod $method, string $uri, mixed $payload): ApiRequestInterface
+    private function createRequest(string $responseType, HttpMethod $httpMethod, string $uri, mixed $payload): AbstractApiRequest
     {
-        return new class ($method, $uri, $payload) extends AbstractApiRequest
+        return new class ($responseType, $httpMethod, $uri, $payload) extends AbstractApiRequest
         {
             public function __construct(
-                public HttpMethod $method,
+                public string $responseType,
+                public HttpMethod $httpMethod,
                 public string $uri,
                 private readonly mixed $payload,
             ) {
@@ -106,7 +106,9 @@ class ApiClientTest extends TestCase
 
     public static function generateApiRequestParameters(): Generator
     {
+        yield ['method' => HttpMethod::Get, 'uri' => '/path', 'payload' => []];
         yield ['method' => HttpMethod::Get, 'uri' => '/path', 'payload' => ['first' => 'one', 'second' => 'two']];
+        yield ['method' => HttpMethod::Put, 'uri' => '/path', 'payload' => []];
         yield ['method' => HttpMethod::Put, 'uri' => '/path', 'payload' => ['first' => 'one', 'second' => 'two']];
     }
 }

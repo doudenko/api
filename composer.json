@@ -9,6 +9,7 @@
         "guzzlehttp/guzzle": "^7.10",
         "phpdocumentor/reflection-docblock": "^5.6",
         "symfony/property-access": "^7.3",
+        "symfony/property-info": "^7.3",
         "symfony/serializer": "^7.3"
     },
     "require-dev": {
@@ -24,19 +25,21 @@
     },
     "autoload": {
         "psr-4": {
-            "Doudenko\\Api\\": "src/Api"
+            "Doudenko\\Api\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Doudenko\\Api\\Tests\\": "tests/unit/Api"
+            "Doudenko\\Api\\Tests\\": "tests"
         }
     },
     "scripts": {
         "phpunit": "phpunit",
         "phpunit-with-coverage": "XDEBUG_MODE=coverage phpunit --coverage-text",
+        "phpstan": "phpstan",
         "test": [
-            "@phpunit-with-coverage"
+            "@phpunit",
+            "@phpstan"
         ]
     }
 }
