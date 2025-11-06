@@ -6,13 +6,13 @@ namespace Doudenko\Api\Client;
 
 use GuzzleHttp\RequestOptions;
 
-final readonly class HttpRequestOptions
+readonly class HttpRequestOptions
 {
     public function __construct(
         public bool $allowRedirects = false,
-        public int $timeout = 30,
-        public int $connectionTimeout = 5,
-        public string|null $debugFilePath = null,
+        public int $timeout = 0,
+        public int $connectionTimeout = 0,
+        public null|string $debugFilePath = null,
     ) {
     }
 

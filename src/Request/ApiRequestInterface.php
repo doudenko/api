@@ -6,7 +6,11 @@ use Doudenko\Api\Client\HttpMethod;
 
 interface ApiRequestInterface
 {
-    public HttpMethod $method {
+    public string $responseType {
+        get;
+    }
+
+    public HttpMethod $httpMethod {
         get;
     }
 

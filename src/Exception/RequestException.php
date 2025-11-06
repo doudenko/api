@@ -9,12 +9,12 @@ use Throwable;
 
 class RequestException extends ClientException
 {
-    public readonly ApiRequestInterface $apiRequest;
-
-    public function __construct(ApiRequestInterface $apiRequest, string $message, int $code = 0, ?Throwable $previous = null)
-    {
+    public function __construct(
+        public readonly ApiRequestInterface $request,
+        string $message,
+        int $code = 0,
+        ?Throwable $previous = null,
+    ) {
         parent::__construct($message, $code, $previous);
-
-        $this->apiRequest = $apiRequest;
     }
 }

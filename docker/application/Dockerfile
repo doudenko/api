@@ -1,7 +1,5 @@
 FROM php:8.4-fpm-alpine
 
-USER $USER_ID:$GROUP_ID
-
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
 RUN apk add --no-cache bash linux-headers && \
@@ -12,6 +10,10 @@ RUN apk add --no-cache bash linux-headers && \
 	apk del .build-dependencies && \
     rm -rf /tmp/pear
 
+USER $UID:$GID
+
 WORKDIR /var/www
+
+EXPOSE $PHP_PORT:9000/tcp
 
 ENTRYPOINT ["php-fpm"]

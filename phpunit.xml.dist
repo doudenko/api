@@ -3,7 +3,7 @@
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
          backupGlobals="false"
-         bootstrap="tests/unit/bootstrap.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
          processIsolation="false"
          stopOnFailure="false"
@@ -13,7 +13,7 @@
     <coverage/>
     <testsuites>
         <testsuite name="Unit Test Suite">
-            <directory>tests/unit</directory>
+            <directory>tests</directory>
         </testsuite>
     </testsuites>
     <php>

@@ -32,6 +32,12 @@ install: ## Установить зависимости проекта
 update: ## Обновить зависимости проекта
 	@${DOCKER_RUN_AS_USER} composer update --no-cache --prefer-dist
 
+phpunit: ## Запустить PHPUnit
+	@${DOCKER_RUN_AS_USER} composer run-script phpunit
+
+phpstan: ## Запустить PHPStan
+	@${DOCKER_RUN_AS_USER} composer run-script phpstan
+
 test: ## Запустить тесты
 	@${DOCKER_RUN_AS_USER} composer run-script test
 
