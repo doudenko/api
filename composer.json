@@ -3,7 +3,7 @@
     "description": "Basic client implementation for an external service API.",
     "type": "library",
     "license": "MIT",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "require": {
         "php": "^8.4",
         "guzzlehttp/guzzle": "^7.10",
