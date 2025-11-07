@@ -3,18 +3,18 @@
     "description": "Basic client implementation for an external service API.",
     "type": "library",
     "license": "MIT",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "require": {
         "php": "^8.4",
         "guzzlehttp/guzzle": "^7.10",
         "phpdocumentor/reflection-docblock": "^5.6",
-        "symfony/property-access": "^7.3",
-        "symfony/property-info": "^7.3",
-        "symfony/serializer": "^7.3"
+        "symfony/property-access": "^7.4",
+        "symfony/property-info": "^7.4",
+        "symfony/serializer": "^7.4"
     },
     "require-dev": {
         "dg/bypass-finals": "^1.9",
-        "friendsofphp/php-cs-fixer": "^3.89",
+        "friendsofphp/php-cs-fixer": "^3.91",
         "mockery/mockery": "^1.6",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^11.5"
@@ -30,16 +30,17 @@
     },
     "autoload-dev": {
         "psr-4": {
+            "Doudenko\\Api\\Examples\\": "examples",
             "Doudenko\\Api\\Tests\\": "tests"
         }
     },
     "scripts": {
-        "phpunit": "phpunit",
-        "phpunit-with-coverage": "XDEBUG_MODE=coverage phpunit --coverage-text",
-        "phpstan": "phpstan",
-        "test": [
-            "@phpunit",
-            "@phpstan"
+        "unit-test": "phpunit",
+        "unit-test-coverage": "XDEBUG_MODE=coverage phpunit --coverage-text",
+        "static-analyze": "phpstan",
+        "check": [
+            "@static-analyze",
+            "@unit-test-coverage"
         ]
     }
 }

@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Doudenko\Api\Serializer;
+namespace Doudenko\Api\Converter;
 
+use Symfony\Component\PropertyInfo\Extractor\ConstructorExtractor;
 use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
@@ -12,6 +13,8 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\Mapping\Loader\LoaderChain;
+use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
@@ -25,19 +28,19 @@ use Symfony\Component\Serializer\SerializerInterface;
 use const JSON_PRESERVE_ZERO_FRACTION;
 use const JSON_UNESCAPED_UNICODE;
 
-readonly class JsonSerializerFactory
+final readonly class JsonConverterFactory implements ConverterFactoryInterface
 {
     /**
      * @param array<string, mixed> $defaultContext
      */
     public function __construct(
-        private array $defaultContext =  [
-            JsonEncode::OPTIONS => JSON_PRESERVE_ZERO_FRACTION | JSON_UNESCAPED_UNICODE,
+        private array $defaultContext = [
+            JsonEncode::OPTIONS => JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION,
         ],
     ) {
     }
 
-    public function create(): NormalizerInterface & SerializerInterface
+    public function create(): SerializerInterface & NormalizerInterface
     {
         return new Serializer(
             normalizers: [
@@ -49,6 +52,7 @@ readonly class JsonSerializerFactory
                     $this->createNameConverter(),
                     new PropertyInfoExtractor(
                         typeExtractors: [
+                            new ConstructorExtractor(),
                             new ReflectionExtractor(),
                             new PhpDocExtractor(),
                         ],
@@ -65,7 +69,9 @@ readonly class JsonSerializerFactory
     private function createClassMetadataFactory(): ClassMetadataFactoryInterface
     {
         return new ClassMetadataFactory(
-            new AttributeLoader(),
+            new LoaderChain([
+                new AttributeLoader(),
+            ]),
         );
     }
 
@@ -73,6 +79,7 @@ readonly class JsonSerializerFactory
     {
         return new MetadataAwareNameConverter(
             $this->createClassMetadataFactory(),
+            new CamelCaseToSnakeCaseNameConverter(),
         );
     }
 }

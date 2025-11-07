@@ -14,5 +14,8 @@ interface ApiRequestInterface
         get;
     }
 
-    public function getPayload(): mixed;
+    /**
+     * @return array<string, mixed> | object
+     */
+    public function getPayload(): array | object;
 }

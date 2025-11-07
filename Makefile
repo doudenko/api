@@ -32,14 +32,17 @@ install: ## Установить зависимости проекта
 update: ## Обновить зависимости проекта
 	@${DOCKER_RUN_AS_USER} composer update --no-cache --prefer-dist
 
-phpunit: ## Запустить PHPUnit
-	@${DOCKER_RUN_AS_USER} composer run-script phpunit
+unit-test: ## Запустить модульные тесты
+	@${DOCKER_RUN_AS_USER} composer run-script unit-test
 
-phpstan: ## Запустить PHPStan
-	@${DOCKER_RUN_AS_USER} composer run-script phpstan
+unit-test-coverage: ## Запустить модульные тесты с оценкой процента покрытия
+	@${DOCKER_RUN_AS_USER} composer run-script unit-test-coverage
 
-test: ## Запустить тесты
-	@${DOCKER_RUN_AS_USER} composer run-script test
+static-analyze: ## Запустить статический анализ кода
+	@${DOCKER_RUN_AS_USER} composer run-script static-analyze
 
-run: ## Выполнить стартовый скрипт
-	@${DOCKER_RUN_AS_USER} php public/index.php
+check: ## Выполнить полную проверку проекта
+	@${DOCKER_RUN_AS_USER} composer run-script check
+
+example: ## Запустить пример кода
+	@${DOCKER_RUN_AS_USER} php examples/send.php
