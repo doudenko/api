@@ -28,7 +28,7 @@ final class ApiClientTest extends TestCase
     #[DataProvider('generateApiRequestParameters')]
     public function sendAsyncPositive(HttpMethod $method, string $uri, mixed $payload): void
     {
-        $request = $this->createRequest(ApiResponse::class, $method, $uri, $payload);
+        $request = $this->createRequest($method, $uri, $payload);
 
         $httpRequestFactoryMock = mock(HttpRequestFactoryInterface::class);
         $httpRequestFactoryMock
@@ -63,7 +63,7 @@ final class ApiClientTest extends TestCase
             $httpRequestOptionsMock,
         );
 
-        $actualResponse = $apiClient->sendAsync($request)->wait();
+        $actualResponse = $apiClient->sendAsync($request, ApiResponse::class)->wait();
 
         self::assertInstanceOf(ApiResponseInterface::class, $actualResponse);
         self::assertSame($expectedResponse, $actualResponse);
@@ -81,16 +81,15 @@ final class ApiClientTest extends TestCase
             mock(SerializerInterface::class),
         );
 
-        $request = $this->createRequest(stdClass::class, $method, $uri, $payload);
-        $apiClient->sendAsync($request);
+        $request = $this->createRequest($method, $uri, $payload);
+        $apiClient->sendAsync($request, stdClass::class);
     }
 
-    private function createRequest(string $responseType, HttpMethod $httpMethod, string $uri, mixed $payload): AbstractApiRequest
+    private function createRequest(HttpMethod $httpMethod, string $uri, mixed $payload): AbstractApiRequest
     {
-        return new class ($responseType, $httpMethod, $uri, $payload) extends AbstractApiRequest
+        return new class ($httpMethod, $uri, $payload) extends AbstractApiRequest
         {
             public function __construct(
-                public string $responseType,
                 public HttpMethod $httpMethod,
                 public string $uri,
                 private readonly mixed $payload,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Doudenko\Api\Client;
 
+use Doudenko\Api\Exception\DomainClientException;
 use Doudenko\Api\Exception\RequestException;
 use Doudenko\Api\Request\ApiRequestInterface;
 use Doudenko\Api\Response\ApiResponseInterface;
@@ -15,6 +16,9 @@ use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Throwable;
 
+/**
+ * @template ResponseType of ApiResponseInterface
+ */
 readonly class ApiClient implements ApiClientInterface
 {
     public function __construct(
@@ -25,14 +29,16 @@ readonly class ApiClient implements ApiClientInterface
     ) {
     }
 
-    final public function send(ApiRequestInterface $request): ApiResponseInterface
+    final public function send(ApiRequestInterface $request, string $responseType): ApiResponseInterface
     {
-        return $this->sendAsync($request)->wait();
+        return $this->sendAsync($request, $responseType)->wait();
     }
 
-    final public function sendAsync(ApiRequestInterface $request): PromiseInterface
+    final public function sendAsync(ApiRequestInterface $request, string $responseType): PromiseInterface
     {
-        $responseType = $request->responseType;
+        if (!is_a($responseType, ApiResponseInterface::class, true)) {
+            throw new DomainClientException('The specified class is not a valid API response class.');
+        }
 
         try {
             $httpRequest = $this->httpRequestFactory->create($request);
@@ -49,12 +55,9 @@ readonly class ApiClient implements ApiClientInterface
     }
 
     /**
-     * @template ResponseObject of ApiResponseInterface
-     * @template ResponseType of string | class-string<ResponseObject>
+     * @param class-string<ResponseType> $className
      *
-     * @param ResponseType $className
-     *
-     * @return ResponseObject
+     * @return ResponseType
      * @throws ExceptionInterface If an error occurred while processing the response body.
      */
     protected function deserializeResponseBody(ResponseInterface $httpResponse, string $className): ApiResponseInterface
