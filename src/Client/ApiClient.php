@@ -13,25 +13,37 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Throwable;
 
-/**
- * @template ResponseType of ApiResponseInterface
- */
 readonly class ApiClient implements ApiClientInterface
 {
     public function __construct(
         protected HttpRequestFactoryInterface $httpRequestFactory,
         protected ClientInterface $httpClient,
-        protected SerializerInterface $serializer,
-        protected HttpRequestOptions $httpRequestOptions = new HttpRequestOptions(),
+        protected SerializerInterface & NormalizerInterface $converter,
+        protected ApiConfiguration $configuration,
     ) {
     }
 
+    /**
+     * @template ResponseType of ApiResponseInterface
+     *
+     * @param class-string<ResponseType> $responseType
+     *
+     * @return ResponseType
+     */
     final public function send(ApiRequestInterface $request, string $responseType): ApiResponseInterface
     {
-        return $this->sendAsync($request, $responseType)->wait();
+        $responsePromise = $this->sendAsync($request, $responseType);
+
+        /**
+         * @var ResponseType $response
+         */
+        $response = $responsePromise->wait();
+
+        return $response;
     }
 
     final public function sendAsync(ApiRequestInterface $request, string $responseType): PromiseInterface
@@ -41,34 +53,41 @@ readonly class ApiClient implements ApiClientInterface
         }
 
         try {
-            $httpRequest = $this->httpRequestFactory->create($request);
-            $httpRequestOptions = $this->httpRequestOptions->toArray();
+            $httpRequest = $this->httpRequestFactory->create($this->configuration, $request);
+            $httpRequestOptions = $this->configuration->httpOptions->toArray();
         } catch (ExceptionInterface $exception) {
             $this->throwRequestException($exception, $request);
         }
 
         return $this->httpClient
             ->sendAsync($httpRequest, $httpRequestOptions)
-            ->then(fn (ResponseInterface $httpResponse) => $this->deserializeResponseBody($httpResponse, $responseType))
+            ->then(fn (ResponseInterface $httpResponse) => $this->deserializeResponse($httpResponse, $responseType))
             ->otherwise(fn (Throwable $throwable) => $this->throwRequestException($throwable, $request))
         ;
     }
 
     /**
-     * @param class-string<ResponseType> $className
+     * @template ResponseType of ApiResponseInterface
+     *
+     * @param class-string<ResponseType> $responseType
      *
      * @return ResponseType
      * @throws ExceptionInterface If an error occurred while processing the response body.
      */
-    protected function deserializeResponseBody(ResponseInterface $httpResponse, string $className): ApiResponseInterface
+    protected function deserializeResponse(ResponseInterface $httpResponse, string $responseType): ApiResponseInterface
     {
-        $bodyContent = $httpResponse->getBody()->getContents();
+        $responseBodyContent = $httpResponse->getBody()->getContents();
 
-        return $this->serializer->deserialize(
-            $bodyContent,
-            $className,
+        /**
+         * @var ResponseType $responsePayload
+         */
+        $responsePayload = $this->converter->deserialize(
+            $responseBodyContent,
+            $responseType,
             JsonEncoder::FORMAT,
         );
+
+        return $responsePayload;
     }
 
     protected function throwRequestException(Throwable $throwable, ApiRequestInterface $request): never

@@ -1,18 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- http://www.phpunit.de/manual/current/en/appendixes.configuration.html -->
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
-         backupGlobals="false"
-         bootstrap="tests/bootstrap.php"
-         colors="true"
-         processIsolation="false"
-         stopOnFailure="false"
-         cacheDirectory="runtime/phpunit"
-         backupStaticProperties="false"
+<phpunit
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+        bootstrap="tests/bootstrap.php"
+        cacheDirectory="runtime/phpunit"
+        colors="true"
+        processIsolation="true"
+        stopOnFailure="true"
 >
     <coverage/>
     <testsuites>
-        <testsuite name="Unit Test Suite">
+        <testsuite name="Library Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
@@ -21,7 +19,7 @@
     </php>
     <source>
         <include>
-            <directory suffix=".php">src</directory>
+            <directory>src</directory>
         </include>
     </source>
 </phpunit>

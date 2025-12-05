@@ -8,12 +8,11 @@ use Doudenko\Api\Request\ApiRequestInterface;
 use Doudenko\Api\Response\ApiResponseInterface;
 use GuzzleHttp\Promise\PromiseInterface;
 
-/**
- * @template ResponseType of ApiResponseInterface
- */
 interface ApiClientInterface
 {
     /**
+     * @template ResponseType of ApiResponseInterface
+     *
      * @param class-string<ResponseType> $responseType
      *
      * @return ResponseType
@@ -23,6 +22,8 @@ interface ApiClientInterface
     public function send(ApiRequestInterface $request, string $responseType): ApiResponseInterface;
 
     /**
+     * @template ResponseType of ApiResponseInterface
+     *
      * @param class-string<ResponseType> $responseType
      *
      * @throws DomainClientException
